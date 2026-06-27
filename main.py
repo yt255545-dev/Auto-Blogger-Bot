@@ -3,40 +3,53 @@ from email.message import EmailMessage
 import os
 import requests
 import random
-import datetime
 
 # সেটিংস
 email_user = "Yt255545@gmail.com"
-email_pass = os.environ.get("EMAIL_PASS") # গিটহাব সিক্রেটে অ্যাপ পাসওয়ার্ডটি রাখুন
+email_pass = os.environ.get("EMAIL_PASS")
 recipient = "yt255545.Finance1@blogger.com"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
-def generate_content():
-    # প্রতিবার রান করার সময় একটি র‍্যান্ডম ক্যাটাগরি বেছে নেবে
-    categories = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
-    cat = random.choice(categories)
+# ক্যাটাগরি লিস্ট
+CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
+
+def get_and_update_category():
+    # গিটহাবে 'category_index.txt' নামে একটি ফাইল ব্যবহার করছি যাতে সিরিয়াল বজায় থাকে
+    filename = "category_index.txt"
+    if not os.path.exists(filename):
+        index = 0
+    else:
+        with open(filename, "r") as f:
+            index = int(f.read().strip())
     
+    cat = CATEGORIES[index % len(CATEGORIES)]
+    
+    # ইনডেক্স বাড়িয়ে ফাইল আপডেট করা
+    with open(filename, "w") as f:
+        f.write(str(index + 1))
+    return cat
+
+def generate_content(cat):
     url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    prompt = f"""Write an 800-word SEO-optimized blog post in English about {cat}.
-    1. Include an H1 title.
-    2. Use H2/H3 headings.
-    3. Add a free Unsplash image URL at the start.
-    4. Insert '' after intro, middle, and end.
-    5. Include an FAQ section.
-    6. Return HTML only. No Markdown."""
+    prompt = f"""Write a high-quality, 800+ words SEO-optimized blog post in English about: {cat}.
+    - Title: Catchy H1.
+    - Image: Add a relevant Unsplash image URL at the start.
+    - Ads: Place '' after intro, middle, and end.
+    - Structure: Use H2/H3, FAQ section, unique content.
+    - Format: HTML only. No markdown formatting."""
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
     response = requests.post(url, headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content'], cat
+    return response.json()['choices'][0]['message']['content']
 
-content, cat = generate_content()
+# পোস্ট জেনারেশন ও ইমেইল
+cat = get_and_update_category()
+content = generate_content(cat)
+
 msg = EmailMessage()
-msg['Subject'] = f"{cat} Update - {datetime.date.today()}"
+msg['Subject'] = f"{cat}: Exclusive Finance Tips"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(content, subtype='html')
@@ -44,4 +57,4 @@ msg.set_content(content, subtype='html')
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
     smtp.login(email_user, email_pass)
     smtp.send_message(msg)
-    
+              
