@@ -2,49 +2,50 @@ import smtplib
 from email.message import EmailMessage
 import os
 import requests
-import random
 
-email_user = "Yt255545@gmail.com"
+# গিটহাব সিক্রেট থেকে শুধুমাত্র প্রয়োজনীয় তথ্য নেওয়া হচ্ছে
+recipient = os.environ.get("RECIPIENT_EMAIL") # ব্লগের পাবলিশিং ইমেইল
+post_email = os.environ.get("RECIPIENT_EMAIL") # ব্লগের পাবলিশিং ইমেইলকেই সেন্ডার হিসেবে ব্যবহার করবে
 email_pass = os.environ.get("EMAIL_PASS")
-recipient = "yt255545.Finance11@blogger.com"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
-def generate_content(cat):
+# ক্যাটাগরি সিরিয়াল (১০০% কাজ করবে)
+run_number = int(os.environ.get("GITHUB_RUN_NUMBER", 1))
+CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
+cat = CATEGORIES[(run_number - 1) % len(CATEGORIES)]
+
+def get_image(query):
+    try:
+        headers = {"Authorization": PEXELS_API_KEY}
+        url = f"https://api.pexels.com/v1/search?query={query}&per_page=1"
+        data = requests.get(url, headers=headers, timeout=10).json()
+        return data['photos'][0]['src']['large']
+    except:
+        return "https://images.pexels.com/photos/259132/pexels-photo-259132.jpeg"
+
+def generate_content(category):
+    img = get_image(category)
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    # এবার প্রম্পটটি এমনভাবে লিখেছি যেন সে কোনো স্টার ব্যবহার না করে এবং পরিষ্কার HTML দেয়
-    prompt = f"""You are a professional Financial Blogger. Write an SEO-optimized article about '{cat}'.
-    
-    CRITICAL INSTRUCTIONS:
-    1. DO NOT use asterisks (*), hashtags, or markdown formatting. Use HTML tags only (<h1>, <h2>, <p>, <ul>, <li>).
-    2. Start with: <img src="https://source.unsplash.com/1200x600/?{cat.replace(' ', '+')}" alt="{cat}" style="width:100%; border-radius:10px;">
-    3. Structure: 
-       <h2>Introduction</h2><p>...</p>
-       <h2>Problem Statement</h2><p>...</p>
-       <h2>How It Works</h2><ul><li>...</li></ul>
-       <h2>Key Benefits</h2><ul><li>...</li></ul>
-       <h2>Expert Tips</h2><p>...</p>
-       <h2>FAQ</h2><p>...</p>
-    4. Ads: Insert '<div style="background:#f4f4f4; padding:20px; text-align:center;">AD SPACE</div>' after every two sections.
-    5. No formatting symbols: Clean, simple, professional text only.
-    6. Tone: Authoritative yet simple for common people."""
+    prompt = f"Write an expert 800+ word financial guide about '{category}'. Use only <h1>, <h2>, <p>, <ul>, <li>, <table>. No markdown, no stars, no hashes. Start with <img src='{img}' style='width:100%; border-radius:10px;'>. Include SEO title, Meta Description, Steps, Pros/Cons, FAQ, and Keywords at the end."
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
-    response = requests.post(url, headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content']
+    response = requests.post(url, headers=headers, timeout=60).json()
+    
+    raw = response['choices'][0]['message']['content']
+    return raw.replace("```html", "").replace("```", "").replace("**", "").replace("*", "").replace("#", "").strip()
 
-CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
-cat = random.choice(CATEGORIES)
+# পোস্ট তৈরি ও পাঠানো
 content = generate_content(cat)
-
 msg = EmailMessage()
-msg['Subject'] = f"Complete Guide to {cat}"
-msg['From'] = email_user
-msg['To'] = recipient
+msg['Subject'] = f"{cat} Expert Guide 2026"
+msg['From'] = recipient  # এখানে আপনার সেই ব্লগার ইমেইল আইডিটিই ব্যবহার করা হয়েছে
+msg['To'] = recipient    # পোস্ট যাওয়ার ঠিকানা
 msg.set_content(content, subtype='html')
 
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-    smtp.login(email_user, email_pass)
+    smtp.login(recipient, email_pass) # ব্লগার ইমেইল আইডি দিয়ে লগইন করবে
     smtp.send_message(msg)
     
