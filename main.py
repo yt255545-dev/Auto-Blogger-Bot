@@ -16,28 +16,28 @@ def generate_ai_content():
         "HTTP-Referer": "https://github.com/yt255545-dev/Auto-Blogger-Bot"
     }
     
-    # আপনার দেওয়া মডেল অনুযায়ী কোড
+    # আপনার দেওয়া মডেলগুলো ফ্রি ট্যাগসহ এখানে দেওয়া হলো
     data = {
-        "model": "google/gemma-4-26b-it:free", 
+        "model": "google/gemma-2-27b-it:free", 
         "messages": [{"role": "user", "content": "Write a professional educational article about Finance/Investment in English. Include an emotional hook, title (h1), and clear solution. Use HTML tags only."}]
     }
     
     response = requests.post(url, headers=headers, json=data)
     
-    # যদি প্রথম মডেলে এরর দেয়, তবে দ্বিতীয়টি ট্রাই করবে
+    # যদি প্রথম মডেলে এরর হয়, তবে দ্বিতীয় মডেলটি ট্রাই করবে
     if response.status_code != 200:
-        data["model"] = "google/gemma-4-31b-it:free"
+        data["model"] = "google/gemma-2-9b-it:free"
         response = requests.post(url, headers=headers, json=data)
         
     if response.status_code != 200:
-        raise Exception(f"API Error: {response.text}")
+        raise Exception(f"API Error: {response.status_code} - {response.text}")
         
     result = response.json()
     return result['choices'][0]['message']['content']
 
 html_content = generate_ai_content()
 msg = EmailMessage()
-msg['Subject'] = "Finance Strategy Insight"
+msg['Subject'] = "New Finance Strategy"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(html_content, subtype='html')
