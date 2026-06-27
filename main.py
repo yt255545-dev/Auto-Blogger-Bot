@@ -4,11 +4,12 @@ import os
 import requests
 import random
 
-email_user = "Yt255545@gmail.com"
+# সিক্রেট থেকে ডাটা নেওয়া
+email_user = os.environ.get("EMAIL_USER")
 email_pass = os.environ.get("EMAIL_PASS")
-recipient = "yt255545.Finance1@blogger.com"
+recipient = os.environ.get("RECIPIENT_EMAIL")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY") # এটি নতুন সিক্রেট হিসেবে গিটহাবে যোগ করুন
+PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
 def get_pexels_image(query):
     try:
@@ -25,23 +26,46 @@ def generate_content(cat):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    prompt = f"""Write an SEO-expert financial blog post about '{cat}'.
-    Follow this structure strictly using HTML tags only:
+    # এখানে প্রম্পটটি কন্টেন্ট এবং এসইও স্ট্রাকচারের ওপর গুরুত্ব দিয়েছে
+    prompt = f"""Write an authoritative, SEO-optimized financial guide about '{cat}'. 
+    Use semantic HTML only. NO markdown, NO asterisks, NO 'AD SPACE' text.
     
-    <h1>[SEO Catchy Title]</h1>
-    <img src="{image_url}" alt="{cat}" width="100%" style="border-radius:10px;">
+    STRUCTURE:
+    <h1>{cat} Guide 2026: Everything You Need to Know</h1>
+    <img src="{image_url}" alt="{cat} finance" width="100%">
     
-    <h2>Introduction</h2><p>...</p>
-    <h2>What is {cat}?</h2><p>...</p>
-    <h2>Step-by-Step Guide</h2><ol><li>...</li></ol>
-    <h2>Pros & Cons</h2><table><tr><th>Pros</th><th>Cons</th></tr><tr><td>...</td><td>...</td></tr></table>
-    <h2>FAQs</h2><h3>Q: ...</h3><p>A: ...</p>
+    <p><em>Meta Description: A complete guide on {cat} covering types, risks, benefits, and expert tips for 2026.</em></p>
     
-    <div style="background:#f4f4f4; padding:15px; border-radius:5px;">AD SPACE</div>
+    <h2>Introduction</h2>
+    <p>Hook the reader with a scenario, then define {cat}.</p>
     
-    <a href="https://yt255545.blogspot.com/" style="padding:10px; background:blue; color:white;">Read More</a>
+    <h2>Quick Answer (TL;DR)</h2>
+    <p>Provide a 2-3 sentence summary.</p>
     
-    NO asterisks (*), NO markdown. Clean HTML only."""
+    <h2>What is {cat} and How It Works?</h2>
+    <p>Expert explanation...</p>
+    
+    <h2>Key Types of {cat}</h2>
+    <ul><li>Type 1</li><li>Type 2</li></ul>
+    
+    <h2>Step-by-Step Guide</h2>
+    <ol><li>Step 1</li><li>Step 2</li></ol>
+    
+    <h2>Pros and Cons</h2>
+    <table><tr><th>Benefits</th><th>Drawbacks</th></tr><tr><td>...</td><td>...</td></tr></table>
+    
+    <h2>Common Mistakes and Best Practices</h2>
+    <p>Expert advice...</p>
+    
+    <h2>FAQs</h2>
+    <h3>What is the biggest risk in {cat}?</h3>
+    <p>Detailed answer...</p>
+    
+    <h2>Latest Updates 2026 and Conclusion</h2>
+    <p>Summary and final recommendation.</p>
+    
+    <p><a href="https://yt255545.blogspot.com/">Explore More Financial Tips</a></p>
+    """
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
     response = requests.post(url, headers=headers, json=data)
@@ -52,7 +76,7 @@ cat = random.choice(CATEGORIES)
 content = generate_content(cat)
 
 msg = EmailMessage()
-msg['Subject'] = f"Guide: {cat} (2026 Edition)"
+msg['Subject'] = f"{cat} Expert Guide 2026"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(content, subtype='html')
