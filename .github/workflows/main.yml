@@ -1,0 +1,22 @@
+name: Auto Blog Poster
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run script
+        env:
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: python main.py
+        
