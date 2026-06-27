@@ -3,10 +3,15 @@ from email.message import EmailMessage
 import os
 import requests
 
-# গিটহাব সিক্রেট থেকে ডাটা নিচ্ছে
-email_user = "yt255545.Finance1@blogger.com"
+# ১. আপনার আসল জিমেইল (যেটার App Password গিটহাবে দেওয়া আছে)
+email_user = "Yt255545@gmail.com"
+
+# ২. গিটহাব সিক্রেট থেকে আপনার App Password নেবে
 email_pass = os.environ.get("EMAIL_PASS")
+
+# ৩. আপনার ব্লগারের সিক্রেট ইমেইল (যেখানে ইমেইল গেলে ব্লগারে পোস্ট হবে)
 recipient = "yt255545.Finance1@blogger.com"
+
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 def generate_ai_content():
@@ -17,7 +22,6 @@ def generate_ai_content():
         "HTTP-Referer": "https://github.com/yt255545-dev/Auto-Blogger-Bot"
     }
     
-    # এটি বর্তমানে ওপেন রাউটারে সবচেয়ে স্থিতিশীল ফ্রি মডেল
     data = {
         "model": "meta-llama/llama-3-8b-instruct",
         "messages": [{"role": "user", "content": "Write a professional educational article about Finance/Investment in English. Include an emotional hook, title (h1), and clear solution. Use HTML tags only."}]
@@ -31,16 +35,17 @@ def generate_ai_content():
     result = response.json()
     return result['choices'][0]['message']['content']
 
-# পোস্ট জেনারেট করা
+# AI দিয়ে কন্টেন্ট জেনারেট করা হচ্ছে
 html_content = generate_ai_content()
 
-# ইমেইল পাঠানো
+# ইমেইল সেটআপ করা হচ্ছে
 msg = EmailMessage()
-msg['Subject'] = "Finance Strategy"
+msg['Subject'] = "New Finance Strategy"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(html_content, subtype='html')
 
+# গুগলের সার্ভারে লগইন করে ব্লগারে ইমেইল পাঠানো হচ্ছে
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
     smtp.login(email_user, email_pass)
     smtp.send_message(msg)
