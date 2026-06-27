@@ -13,18 +13,22 @@ def generate_content(cat):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    # আপনার দেওয়া স্ট্রাকচার অনুযায়ী প্রম্পট
-    prompt = f"""You are a top-tier SEO Finance Expert. Write an exhaustive, professional blog post in English about '{cat}'. 
-    Strictly follow this structure:
+    # এবার প্রম্পটটি এমনভাবে লিখেছি যেন সে কোনো স্টার ব্যবহার না করে এবং পরিষ্কার HTML দেয়
+    prompt = f"""You are a professional Financial Blogger. Write an SEO-optimized article about '{cat}'.
     
-    1. Title: Create an SEO-optimized H1 Title.
-    2. Image: Use this exact HTML tag at the top: <img src="https://images.unsplash.com/photo-1554224155-8d04cb27cd6c?w=1200" alt="{cat} finance guide" style="width:100%; height:auto;">
-    3. Content Structure: Strictly include: Introduction, Problem Statement, Definition, How It Works, Step-by-Step Guide, Pros & Cons, Common Mistakes, Expert Tips, FAQs, and Conclusion.
-    4. Formatting: Use H2 for major headings, H3 for sub-points. Use clean Bullet Points.
-    5. Ads: Insert '<div class="adsense-block"> [AD_SPACE] </div>' after the Intro, middle, and end.
-    6. SEO: Add a Meta Description in italics at the start.
-    7. Professionalism: Write in a helpful, conversational, and authoritative tone. No asterisks (*). No markdown. Return valid HTML only.
-    8. CTA: Add a button at the end: <a href="https://yt255545.blogspot.com/" style="padding:15px; background:blue; color:white; border-radius:5px;">Read More Finance Tips</a>"""
+    CRITICAL INSTRUCTIONS:
+    1. DO NOT use asterisks (*), hashtags, or markdown formatting. Use HTML tags only (<h1>, <h2>, <p>, <ul>, <li>).
+    2. Start with: <img src="https://source.unsplash.com/1200x600/?{cat.replace(' ', '+')}" alt="{cat}" style="width:100%; border-radius:10px;">
+    3. Structure: 
+       <h2>Introduction</h2><p>...</p>
+       <h2>Problem Statement</h2><p>...</p>
+       <h2>How It Works</h2><ul><li>...</li></ul>
+       <h2>Key Benefits</h2><ul><li>...</li></ul>
+       <h2>Expert Tips</h2><p>...</p>
+       <h2>FAQ</h2><p>...</p>
+    4. Ads: Insert '<div style="background:#f4f4f4; padding:20px; text-align:center;">AD SPACE</div>' after every two sections.
+    5. No formatting symbols: Clean, simple, professional text only.
+    6. Tone: Authoritative yet simple for common people."""
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
     response = requests.post(url, headers=headers, json=data)
@@ -35,7 +39,7 @@ cat = random.choice(CATEGORIES)
 content = generate_content(cat)
 
 msg = EmailMessage()
-msg['Subject'] = f"Guide: {cat} - Expert Financial Advice for 2026"
+msg['Subject'] = f"Complete Guide to {cat}"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(content, subtype='html')
