@@ -3,6 +3,7 @@ from email.message import EmailMessage
 import os
 import requests
 
+# গিটহাব সিক্রেট থেকে ডাটা নিচ্ছে
 email_user = "yt255545.Finance1@blogger.com"
 email_pass = os.environ.get("EMAIL_PASS")
 recipient = "yt255545.Finance1@blogger.com"
@@ -16,7 +17,7 @@ def generate_ai_content():
         "HTTP-Referer": "https://github.com/yt255545-dev/Auto-Blogger-Bot"
     }
     
-    # এরর মেসেজে দেওয়া মডেল স্লাগটি ব্যবহার করা হয়েছে
+    # এটি বর্তমানে ওপেন রাউটারে সবচেয়ে স্থিতিশীল ফ্রি মডেল
     data = {
         "model": "meta-llama/llama-3-8b-instruct",
         "messages": [{"role": "user", "content": "Write a professional educational article about Finance/Investment in English. Include an emotional hook, title (h1), and clear solution. Use HTML tags only."}]
@@ -30,9 +31,12 @@ def generate_ai_content():
     result = response.json()
     return result['choices'][0]['message']['content']
 
+# পোস্ট জেনারেট করা
 html_content = generate_ai_content()
+
+# ইমেইল পাঠানো
 msg = EmailMessage()
-msg['Subject'] = "Finance Strategy Insight"
+msg['Subject'] = "Finance Strategy"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(html_content, subtype='html')
@@ -40,4 +44,4 @@ msg.set_content(html_content, subtype='html')
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
     smtp.login(email_user, email_pass)
     smtp.send_message(msg)
-
+    
