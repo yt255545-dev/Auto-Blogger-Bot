@@ -2,35 +2,23 @@ import smtplib
 from email.message import EmailMessage
 import os
 import requests
+import random
 
+# ইউজার সেটিংস
 email_user = "Yt255545@gmail.com"
 email_pass = os.environ.get("EMAIL_PASS")
 recipient = "yt255545.Finance1@blogger.com"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
-# ক্যাটাগরি লিস্ট (একটির পর একটি চলবে)
+# ১. ক্যাটাগরি লিস্ট
 CATEGORIES = [
     "Credit Cards", "Loans", "Banking", "Investing", 
     "Insurance", "Taxes", "Personal Finance"
 ]
 
-def get_next_category():
-    # গিটহাব অ্যাকশন রান করার সময় একটি ফাইল থেকে শেষ ক্যাটাগরি চেক করবে
-    filename = "last_index.txt"
-    if not os.path.exists(filename):
-        index = 0
-    else:
-        with open(filename, "r") as f:
-            index = int(f.read().strip())
-    
-    current_cat = CATEGORIES[index]
-    
-    # ইনডেক্স আপডেট করা
-    next_index = (index + 1) % len(CATEGORIES)
-    with open(filename, "w") as f:
-        f.write(str(next_index))
-        
-    return current_cat
+def get_category():
+    # গিটহাব অ্যাকশন প্রতিবার রান করার সময় এখান থেকে একটি ক্যাটাগরি বেছে নেবে
+    return random.choice(CATEGORIES)
 
 def generate_ai_content(cat):
     url = "https://openrouter.ai/api/v1/chat/completions"
@@ -40,16 +28,17 @@ def generate_ai_content(cat):
         "HTTP-Referer": "https://github.com/yt255545-dev/Auto-Blogger-Bot"
     }
     
-    # প্রতিটি পোস্ট ইউনিক করার জন্য প্রম্পট
+    # ২. এসইও এবং অ্যাড-ফ্রেন্ডলি প্রম্পট (সম্পূর্ণ অটোমেশন)
     prompt = f"""Write a unique, professional, high-quality, SEO-optimized blog post in English about: {cat}.
     Requirements:
-    1. Catchy H1 Title.
-    2. Use H2 and H3 tags.
-    3. Include a relevant Unsplash image URL at the top.
-    4. Insert '' after intro, middle, and end.
-    5. Write 800+ words, unique content, no repetition.
-    6. Include FAQ section.
-    7. Use HTML tags only."""
+    - Target Category: {cat}
+    - Title: Create a catchy, SEO-friendly H1 title.
+    - Structure: Use proper H2 and H3 tags.
+    - Images: Include one relevant Unsplash image URL at the top.
+    - Monetization: Insert '' after the introduction, middle, and before the conclusion.
+    - Length: Write 800+ words of unique, informative content.
+    - SEO: Include an FAQ section at the end and naturally use keywords related to {cat}.
+    - Format: Use HTML tags ONLY. Do not use Markdown code blocks."""
 
     data = {
         "model": "meta-llama/llama-3-8b-instruct",
@@ -62,11 +51,12 @@ def generate_ai_content(cat):
     return response.json()['choices'][0]['message']['content']
 
 # মেইন লজিক
-cat = get_next_category()
-html_content = generate_ai_content(cat)
+category = get_category()
+html_content = generate_ai_content(category)
 
+# ইমেইল সেন্ডিং
 msg = EmailMessage()
-msg['Subject'] = f"{cat}: Latest Update"
+msg['Subject'] = f"{category}: {random.randint(100, 999)} - New Update"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(html_content, subtype='html')
