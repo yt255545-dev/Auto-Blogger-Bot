@@ -2,16 +2,11 @@ import smtplib
 from email.message import EmailMessage
 import os
 import requests
+import random
 
-# ১. আপনার আসল জিমেইল (যেটার App Password গিটহাবে দেওয়া আছে)
 email_user = "Yt255545@gmail.com"
-
-# ২. গিটহাব সিক্রেট থেকে আপনার App Password নেবে
 email_pass = os.environ.get("EMAIL_PASS")
-
-# ৩. আপনার ব্লগারের সিক্রেট ইমেইল (যেখানে ইমেইল গেলে ব্লগারে পোস্ট হবে)
 recipient = "yt255545.Finance1@blogger.com"
-
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 def generate_ai_content():
@@ -22,31 +17,37 @@ def generate_ai_content():
         "HTTP-Referer": "https://github.com/yt255545-dev/Auto-Blogger-Bot"
     }
     
+    # উন্নত SEO এবং অ্যাড-ফ্রেন্ডলি প্রম্পট
+    topics = ["Passive Income Strategies", "Best Investment Trends 2026", "Stock Market for Beginners", "Cryptocurrency Tips", "Budgeting Hacks"]
+    selected_topic = random.choice(topics)
+    
+    prompt = f"""Write a professional, high-quality, SEO-optimized blog post in English about: {selected_topic}.
+    Requirements:
+    1. Catchy H1 Title.
+    2. Use H2 and H3 tags for structure.
+    3. Include a high-quality relevant Unsplash image URL at the top.
+    4. Insert '' tag after the introduction, middle, and before the conclusion.
+    5. Write 600+ words with engaging content.
+    6. Include a clear 'Conclusion' and FAQ section for SEO.
+    7. Use HTML tags only."""
+
     data = {
         "model": "meta-llama/llama-3-8b-instruct",
-        "messages": [{"role": "user", "content": "Write a professional educational article about Finance/Investment in English. Include an emotional hook, title (h1), and clear solution. Use HTML tags only."}]
+        "messages": [{"role": "user", "content": prompt}]
     }
     
     response = requests.post(url, headers=headers, json=data)
-    
-    if response.status_code != 200:
-        raise Exception(f"API Error: {response.status_code} - {response.text}")
-        
     result = response.json()
     return result['choices'][0]['message']['content']
 
-# AI দিয়ে কন্টেন্ট জেনারেট করা হচ্ছে
 html_content = generate_ai_content()
-
-# ইমেইল সেটআপ করা হচ্ছে
 msg = EmailMessage()
-msg['Subject'] = "New Finance Strategy"
+msg['Subject'] = "Finance Insight"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(html_content, subtype='html')
 
-# গুগলের সার্ভারে লগইন করে ব্লগারে ইমেইল পাঠানো হচ্ছে
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
     smtp.login(email_user, email_pass)
     smtp.send_message(msg)
-    
+
