@@ -13,22 +13,24 @@ def generate_content(cat):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    # এবার প্রম্পটটি এমনভাবে লিখেছি যেন সে কোনো স্টার ব্যবহার না করে এবং পরিষ্কার HTML দেয়
-    prompt = f"""You are a professional Financial Blogger. Write an SEO-optimized article about '{cat}'.
+    # আপনার দেওয়া ২০টি পয়েন্টসহ প্রম্পট
+    prompt = f"""Write an exhaustive, high-authority blog post about '{cat}'. Use pure HTML only. NO markdown, NO asterisks (*).
     
-    CRITICAL INSTRUCTIONS:
-    1. DO NOT use asterisks (*), hashtags, or markdown formatting. Use HTML tags only (<h1>, <h2>, <p>, <ul>, <li>).
-    2. Start with: <img src="https://source.unsplash.com/1200x600/?{cat.replace(' ', '+')}" alt="{cat}" style="width:100%; border-radius:10px;">
-    3. Structure: 
-       <h2>Introduction</h2><p>...</p>
-       <h2>Problem Statement</h2><p>...</p>
-       <h2>How It Works</h2><ul><li>...</li></ul>
-       <h2>Key Benefits</h2><ul><li>...</li></ul>
-       <h2>Expert Tips</h2><p>...</p>
-       <h2>FAQ</h2><p>...</p>
-    4. Ads: Insert '<div style="background:#f4f4f4; padding:20px; text-align:center;">AD SPACE</div>' after every two sections.
-    5. No formatting symbols: Clean, simple, professional text only.
-    6. Tone: Authoritative yet simple for common people."""
+    STRUCTURE REQUIRED:
+    1. SEO Title (H1) & Meta Description (in italic <p>).
+    2. Table of Contents (Use a simple <ul> list with links).
+    3. Quick Answer (TL;DR) in a highlighted box.
+    4. Definition, Types, and Step-by-Step Guide (Use <ol>).
+    5. Real-Life Example & Comparison Table (Use <table>).
+    6. Pros & Cons (Use <table> or <ul>).
+    7. Fees, Risks, Common Mistakes, Best Practices.
+    8. Latest Updates (2026), Key Takeaways, and Conclusion.
+    9. Call to Action: Add a button to explore more.
+    10. References: Mention 'Sources: Trusted Finance Data 2026'.
+    
+    - Image: Add <img src="https://source.unsplash.com/1200x600/?{cat.replace(' ', '+')}" style="width:100%; border-radius:10px;">
+    - Ads: Insert <div style="background:#f9f9f9; padding:20px; text-align:center;">AD SPACE</div> every 3 sections.
+    - Style: Professional, authoritative, clean, and mobile-friendly."""
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
     response = requests.post(url, headers=headers, json=data)
@@ -39,7 +41,7 @@ cat = random.choice(CATEGORIES)
 content = generate_content(cat)
 
 msg = EmailMessage()
-msg['Subject'] = f"Complete Guide to {cat}"
+msg['Subject'] = f"Comprehensive Guide: {cat} (2026 Update)"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(content, subtype='html')
@@ -47,4 +49,3 @@ msg.set_content(content, subtype='html')
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
     smtp.login(email_user, email_pass)
     smtp.send_message(msg)
-    
