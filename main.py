@@ -16,9 +16,9 @@ def generate_ai_content():
         "HTTP-Referer": "https://github.com/yt255545-dev/Auto-Blogger-Bot"
     }
     
-    # এটি ওপেনরাউটারের সবথেকে স্থিতিশীল ফ্রি মডেল
+    # এরর মেসেজে দেওয়া মডেল স্লাগটি ব্যবহার করা হয়েছে
     data = {
-        "model": "meta-llama/llama-3-8b-instruct:free",
+        "model": "meta-llama/llama-3-8b-instruct",
         "messages": [{"role": "user", "content": "Write a professional educational article about Finance/Investment in English. Include an emotional hook, title (h1), and clear solution. Use HTML tags only."}]
     }
     
@@ -40,4 +40,4 @@ msg.set_content(html_content, subtype='html')
 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
     smtp.login(email_user, email_pass)
     smtp.send_message(msg)
-    
+
