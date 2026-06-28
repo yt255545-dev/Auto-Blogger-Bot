@@ -5,9 +5,9 @@ import requests
 import random
 
 # সেটিংস
-email_user = "Yt255545@gmail.com"
+email_user = "djr00397@gmail.com"
 email_pass = os.environ.get("EMAIL_PASS")
-recipient = "yt255545.Finance1@blogger.com"
+recipient = "yt255545.finance1@blogger.com"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 # ক্যাটাগরি লিস্ট
