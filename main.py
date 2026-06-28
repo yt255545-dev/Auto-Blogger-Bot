@@ -5,7 +5,7 @@ import requests
 
 # আপনার নতুন ইমেইল আইডি এবং ব্লগার পোস্টের ঠিকানা
 sender_email = "djr00397@gmail.com"
-recipient_email = "yt255545.Finance1@blogger.com"
+recipient_email = "yt255545.finance1@blogger.com"
 
 # সিক্রেট কি (গিটহাব সেটিংস থেকে আসবে)
 email_pass = os.environ.get("EMAIL_PASS")
