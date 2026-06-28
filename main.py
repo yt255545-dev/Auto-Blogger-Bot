@@ -4,42 +4,52 @@ import os
 import requests
 import random
 
-email_user = "djr00397@gmail.com"
+# সেটিংস
+email_user = "Yt255545@gmail.com"
 email_pass = os.environ.get("EMAIL_PASS")
-recipient = "yt255545.finance1@blogger.com"
+recipient = "yt255545.Finance1@blogger.com"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+
+# ক্যাটাগরি লিস্ট
+CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
+
+def get_and_update_category():
+    # গিটহাবে 'category_index.txt' নামে একটি ফাইল ব্যবহার করছি যাতে সিরিয়াল বজায় থাকে
+    filename = "category_index.txt"
+    if not os.path.exists(filename):
+        index = 0
+    else:
+        with open(filename, "r") as f:
+            index = int(f.read().strip())
+    
+    cat = CATEGORIES[index % len(CATEGORIES)]
+    
+    # ইনডেক্স বাড়িয়ে ফাইল আপডেট করা
+    with open(filename, "w") as f:
+        f.write(str(index + 1))
+    return cat
 
 def generate_content(cat):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    # এবার প্রম্পটটি এমনভাবে লিখেছি যেন সে কোনো স্টার ব্যবহার না করে এবং পরিষ্কার HTML দেয়
-    prompt = f"""You are a professional Financial Blogger. Write an SEO-optimized article about '{cat}'.
-    
-    CRITICAL INSTRUCTIONS:
-    1. DO NOT use asterisks (*), hashtags, or markdown formatting. Use HTML tags only (<h1>, <h2>, <p>, <ul>, <li>).
-    2. Start with: <img src="https://source.unsplash.com/1200x600/?{cat.replace(' ', '+')}" alt="{cat}" style="width:100%; border-radius:10px;">
-    3. Structure: 
-       <h2>Introduction</h2><p>...</p>
-       <h2>Problem Statement</h2><p>...</p>
-       <h2>How It Works</h2><ul><li>...</li></ul>
-       <h2>Key Benefits</h2><ul><li>...</li></ul>
-       <h2>Expert Tips</h2><p>...</p>
-       <h2>FAQ</h2><p>...</p>
-    4. Ads: Insert '<div style="background:#f4f4f4; padding:20px; text-align:center;">AD SPACE</div>' after every two sections.
-    5. No formatting symbols: Clean, simple, professional text only.
-    6. Tone: Authoritative yet simple for common people."""
+    prompt = f"""Write a high-quality, 800+ words SEO-optimized blog post in English about: {cat}.
+    - Title: Catchy H1.
+    - Image: Add a relevant Unsplash image URL at the start.
+    - Ads: Place '' after intro, middle, and end.
+    - Structure: Use H2/H3, FAQ section, unique content.
+    - Format: HTML only. No markdown formatting."""
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
     response = requests.post(url, headers=headers, json=data)
     return response.json()['choices'][0]['message']['content']
 
-CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
-cat = random.choice(CATEGORIES)
+# পোস্ট জেনারেশন ও ইমেইল
+cat = get_and_update_category()
 content = generate_content(cat)
 
 msg = EmailMessage()
-msg['Subject'] = f"Complete Guide to {cat}"
+msg['Subject'] = f"{cat}: Exclusive Finance Tips"
 msg['From'] = email_user
 msg['To'] = recipient
 msg.set_content(content, subtype='html')
