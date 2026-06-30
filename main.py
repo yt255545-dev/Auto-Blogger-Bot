@@ -1,60 +1,64 @@
 import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 import os
 import requests
-import random
 
-# কনফিগারেশন
-SENDER_EMAIL = "djr00397@gmail.com"
-RECIPIENT_EMAIL = "yt255545.finance1@blogger.com"
-EMAIL_PASS = os.environ.get("EMAIL_PASS")
+# আপনার নতুন ইমেইল আইডি এবং ব্লগার পোস্টের ঠিকানা
+sender_email = "djr00397@gmail.com"
+recipient_email = "yt255545.Finance1@blogger.com"
+
+# সিক্রেট কি (গিটহাব সেটিংস থেকে আসবে)
+email_pass = os.environ.get("EMAIL_PASS")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
-# ক্যাটাগরি তালিকা
+# ক্যাটাগরি সিরিয়াল
 CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
+run_number = int(os.environ.get("GITHUB_RUN_NUMBER", 1))
+cat = CATEGORIES[(run_number - 1) % len(CATEGORIES)]
 
-def get_next_category():
-    # গিটহাব রান নাম্বারের উপর ভিত্তি করে ক্যাটাগরি সিলেক্ট হবে (প্রতিবার এক একটি করে)
-    run_number = int(os.environ.get("GITHUB_RUN_NUMBER", 1))
-    return CATEGORIES[(run_number - 1) % len(CATEGORIES)]
+def get_pexels_image(query):
+    # Pexels API ব্যবহার করে ছবি খোঁজা
+    try:
+        headers = {"Authorization": PEXELS_API_KEY}
+        url = f"https://api.pexels.com/v1/search?query={query}&per_page=1"
+        response = requests.get(url, headers=headers).json()
+        return response['photos'][0]['src']['large']
+    except:
+        # Pexels কাজ না করলে একটি ডিফল্ট ছবি
+        return "https://images.pexels.com/photos/259132/pexels-photo-259132.jpeg"
 
-def generate_seo_content(cat):
+def generate_content(cat):
+    image_url = get_pexels_image(cat)
+    image_html = f'<img src="{image_url}" alt="{cat}" style="width:100%; border-radius:10px; margin-bottom:20px;">'
+    
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    prompt = f"""Write a professional, 100% unique, human-like SEO blog post about '{cat}'.
-    Rules:
-    1. Title: Create an engaging SEO-friendly H1 title including '{cat}'.
-    2. Meta Description: Write a short, italicized description at the start.
-    3. Use H2 and H3 tags to structure sections.
-    4. Structure: Introduction, Detailed Tips, Common Mistakes, FAQ, Conclusion.
-    5. No CSS, No Divs, No Scripts. Only HTML tags: <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>.
-    6. Ensure the tone is authoritative and helpful."""
+    prompt = f"""Write a high-quality, 100% SEO-optimized financial blog post about '{cat}'.
+    
+    CRITICAL RULES:
+    1. Start immediately with this image: {image_html}
+    2. Write an SEO Title (<h1>) and Meta Description (in italic).
+    3. Use only pure HTML tags (<h2>, <p>, <ul>, <li>). NO markdown symbols (*, #, ).
+    4. Structure: Intro, How it works, Pros & Cons Table, Common Mistakes, FAQ, and Conclusion.
+    5. Ads: Insert <div style="margin:20px 0; text-align:center; background:#f9f9f9; padding:15px;">[AD_SPACE]</div> after every two sections.
+    6. Tone: Authoritative, expert, and professional."""
     
     data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
     response = requests.post(url, headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content']
-
-def send_to_blogger(content):
-    msg = MIMEMultipart()
-    # টাইটেল বের করা
-    title_line = content.split('\n')[0].replace("#", "").replace("<h1>", "").replace("</h1>", "").strip()
-    msg['Subject'] = title_line
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = RECIPIENT_EMAIL
+    content = response.json()['choices'][0]['message']['content']
     
-    msg.attach(MIMEText(content, 'html'))
+    return content.replace("``html", "").replace("`", "").strip()
 
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login(SENDER_EMAIL, EMAIL_PASS)
-        smtp.send_message(msg)
+# ইমেইল পাঠানো
+content = generate_content(cat)
+msg = EmailMessage()
+msg['Subject'] = f"{cat} Expert Guide 2026"
+msg['From'] = sender_email
+msg['To'] = recipient_email
+msg.set_content(content, subtype='html')
 
-# মেইন লজিক
-if __name__ == "__main__":
-    category = get_next_category()
-    print(f"Generating post for: {category}")
-    post_content = generate_seo_content(category)
-    send_to_blogger(post_content)
-    print("Post successfully sent!")
-
+with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+    smtp.login(sender_email, email_pass)
+    smtp.send_message(msg)
