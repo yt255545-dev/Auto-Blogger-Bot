@@ -3,57 +3,46 @@ from email.message import EmailMessage
 import os
 import requests
 import random
+import time # টাইম ডিলে ব্যবহারের জন্য
 
-# সেটিংস
-email_user = "djr00397@gmail.com"
-email_pass = os.environ.get("EMAIL_PASS")
-recipient = "yt255545.finance1@blogger.com"
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-
-# ক্যাটাগরি লিস্ট
-CATEGORIES = ["Credit Cards", "Loans", "Banking", "Investing", "Insurance", "Taxes", "Personal Finance"]
-
-def get_and_update_category():
-    # গিটহাবে 'category_index.txt' নামে একটি ফাইল ব্যবহার করছি যাতে সিরিয়াল বজায় থাকে
-    filename = "category_index.txt"
-    if not os.path.exists(filename):
-        index = 0
-    else:
-        with open(filename, "r") as f:
-            index = int(f.read().strip())
-    
-    cat = CATEGORIES[index % len(CATEGORIES)]
-    
-    # ইনডেক্স বাড়িয়ে ফাইল আপডেট করা
-    with open(filename, "w") as f:
-        f.write(str(index + 1))
-    return cat
+# ... (অন্যান্য আগের কোডগুলো একই থাকবে)
 
 def generate_content(cat):
+    # ছবি সরাসরি ইমেইলের বডিতে না দিয়ে লিঙ্কের আকারে দেওয়া নিরাপদ
+    image_url = get_pexels_image(cat)
+    
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
     
-    prompt = f"""Write a high-quality, 800+ words SEO-optimized blog post in English about: {cat}.
-    - Title: Catchy H1.
-    - Image: Add a relevant Unsplash image URL at the start.
-    - Ads: Place '' after intro, middle, and end.
-    - Structure: Use H2/H3, FAQ section, unique content.
-    - Format: HTML only. No markdown formatting."""
+    # প্রম্পটে পরিবর্তন: খুব বেশি জটিল HTML পরিহার করা হয়েছে
+    prompt = f"""Write a professional financial blog post about '{cat}'.
     
-    data = {"model": "meta-llama/llama-3-8b-instruct", "messages": [{"role": "user", "content": prompt}]}
-    response = requests.post(url, headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content']
+    RULES:
+    1. Do NOT include <img> tags or complex div layouts.
+    2. Write an SEO Title and Meta Description clearly.
+    3. Use simple HTML: <h2> for headers, <p> for paragraphs, <ul> for lists.
+    4. Structure: Intro, How it works, Pros & Cons, Common Mistakes, Conclusion.
+    5. At the end, add a text-based link to the image: Image: {image_url}
+    6. Tone: Professional and natural, avoid "robotic" patterns."""
+    
+    # ... (বাকি কোড আগের মতো)
 
-# পোস্ট জেনারেশন ও ইমেইল
-cat = get_and_update_category()
+# ইমেইল পাঠানোর সময় কিছুটা র‍্যান্ডমাইজেশন ও ডিলে যোগ করা
+def send_email_with_delay(content, cat):
+    time.sleep(random.randint(60, 300)) # ১ থেকে ৫ মিনিটের একটি র‍্যান্ডম ডিলে
+    
+    msg = EmailMessage()
+    # সাবজেক্ট লাইনকে ইউনিক করার জন্য টাইমস্ট্যাম্প যোগ করা
+    msg['Subject'] = f"{cat} Analysis - {random.randint(1000, 9999)}"
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+    msg.set_content(content, subtype='html')
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login(sender_email, email_pass)
+        smtp.send_message(msg)
+
+# ফাংশন কল
 content = generate_content(cat)
-
-msg = EmailMessage()
-msg['Subject'] = f"{cat}: Exclusive Finance Tips"
-msg['From'] = email_user
-msg['To'] = recipient
-msg.set_content(content, subtype='html')
-
-with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-    smtp.login(email_user, email_pass)
-    smtp.send_message(msg)
+send_email_with_delay(content, cat)
+    
